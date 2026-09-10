@@ -13,6 +13,7 @@ import { useOrderCreationCity } from "@/entities/order-creation/api/orderCreatio
 export const DeliveryTab = ({ activeTimeTab, setActiveTimeTab }: DeliveryTabProps ) => {
   const delivery = useOrderStore((s) => s.delivery);
   const setDelivery = useOrderStore((s) => s.setDelivery);
+  const setAddressId = useOrderStore((s) => s.setAddressId);
 
   const { address, building, entrance, floor, apartment, intercom, addressCheckStatus } = delivery;
   const city = useOrderStore((s) => s.city);
@@ -21,6 +22,11 @@ export const DeliveryTab = ({ activeTimeTab, setActiveTimeTab }: DeliveryTabProp
 
   const buildingRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  const updateVisibleAddress = (value: Parameters<typeof setDelivery>[0]) => {
+    setDelivery(value);
+    setAddressId(null);
+  };
 
   useEffect(() => {
   if (addressCheckStatus === "success") {
@@ -57,7 +63,7 @@ export const DeliveryTab = ({ activeTimeTab, setActiveTimeTab }: DeliveryTabProp
           <Input 
             value={address} 
             onChange={(e) => 
-              setDelivery({
+              updateVisibleAddress({
                 address: e.target.value,
                 addressCheckStatus: null,
                 streetId: null,
@@ -72,7 +78,7 @@ export const DeliveryTab = ({ activeTimeTab, setActiveTimeTab }: DeliveryTabProp
             className="placeholder:ps-6"
           />
           {!address && <Image src="/icons/search.svg" alt="Поиск" width={20} height={20} className="icon-search"/>}
-  {address && <ClearButton onClick={() => setDelivery({ address: "", addressCheckStatus: null, streetId: null, pointId: null, cafeId: null, })} className="right-1 top-[24px]"/>}
+  {address && <ClearButton onClick={() => updateVisibleAddress({ address: "", addressCheckStatus: null, streetId: null, pointId: null, cafeId: null, })} className="right-1 top-[24px]"/>}
         </div>
         <div className="delivery-buttons-group">
           <Button 
@@ -94,28 +100,28 @@ export const DeliveryTab = ({ activeTimeTab, setActiveTimeTab }: DeliveryTabProp
           type="text"
           ref={buildingRef}
           value={building}
-          onChange={(e) => setDelivery({ building: e.target.value })}
+          onChange={(e) => updateVisibleAddress({ building: e.target.value })}
           label="Корпус"
           placeholder="___" 
           className="delivery-address-details-input"/>
         <Input 
           type="number"
           value={entrance} 
-          onChange={(e) => setDelivery({ entrance: e.target.value })}
+          onChange={(e) => updateVisibleAddress({ entrance: e.target.value })}
           label="Подъезд" 
           placeholder="___"  
           className="delivery-address-details-input"/>
         <Input  
           type="number"
           value={floor} 
-          onChange={(e) => setDelivery({ floor: e.target.value })}
+          onChange={(e) => updateVisibleAddress({ floor: e.target.value })}
           label="Этаж" 
           placeholder="___"  
           className="delivery-address-details-input"/>
         <Input 
           type="number"
           value={apartment} 
-          onChange={(e) => setDelivery({ apartment: e.target.value })}
+          onChange={(e) => updateVisibleAddress({ apartment: e.target.value })}
           label="Квартира" 
           placeholder="___" 
           className="delivery-address-details-input"/>

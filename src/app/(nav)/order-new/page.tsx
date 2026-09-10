@@ -20,6 +20,7 @@ import { citiesApi } from "@/entities/city/api/citiesApi";
 import { pointsApi } from "@/entities/point/api/pointsApi";
 import { normalizeHome, splitStreetAndHome } from "./model/orderAddress";
 import { toPreorderAt } from "./model/orderSchedule";
+import { validateDeliveryDetails } from "./model/orderDelivery";
 
 export default function CurrentOrderPage() {
   const step = useOrderStore((s) => s.step);
@@ -59,7 +60,38 @@ export default function CurrentOrderPage() {
 
   const totalPrice = validatedCart?.total ?? itemsTotal + deliveryPrice;
 
+  const confirmationItems = validatedCart
+    ? validatedCart.items.map((item) => ({
+        name: item.name || `Товар #${item.itemId}`,
+        quantity: item.quantity,
+        price: item.unitPrice,
+      }))
+    : items.map((item) => ({
+        name: item.name,
+        quantity: item.count,
+        price: item.price,
+      }));
+
+  const validateBeforeConfirmation = (): string | null => {
+    if (deliveryType !== "delivery") return null;
+    const result = validateDeliveryDetails({
+      address: delivery.address,
+      addressCheckStatus: delivery.addressCheckStatus,
+      entrance: delivery.entrance,
+      floor: delivery.floor,
+      apartment: delivery.apartment,
+    });
+    return result.valid ? null : result.message ?? "Проверьте данные доставки";
+  };
+
   const prepareConfirmation = async () => {
+    const deliveryError = validateBeforeConfirmation();
+    if (deliveryError) {
+      setValidatedCart(null);
+      setConfirmError(deliveryError);
+      setIsConfirmOpen(true);
+      return;
+    }
     const selectedCityId = cityId;
     const selectedPointId = deliveryType === "delivery" ? delivery.pointId : pointId;
     if (!selectedCityId || !selectedPointId || items.length === 0) {
@@ -93,6 +125,15 @@ export default function CurrentOrderPage() {
 
   const handleConfirm = async () => {
     setConfirmError(null);
+    const deliveryError = validateBeforeConfirmation();
+    if (deliveryError) {
+      setConfirmError(deliveryError);
+      return;
+    }
+    if (validatedCart && !validatedCart.valid) {
+      setConfirmError("Корзина изменилась. Проверьте состав заказа");
+      return;
+    }
     const typeOrder = deliveryType === "delivery" ? 1 : 2;
     setIsSubmitting(true);
     try {
@@ -263,11 +304,7 @@ export default function CurrentOrderPage() {
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
         orderNumber={orderNumber ?? 0}
-        items={items.map((i) => ({
-          name: i.name,
-          quantity: i.count,
-          price: i.price,
-        }))}
+        items={confirmationItems}
         totalPrice={totalPrice}
         deliveryPrice={deliveryPrice}
       />
@@ -288,11 +325,7 @@ export default function CurrentOrderPage() {
         intercom={intercomLabel}
         payment={paymentLabel}
         comment={payment.comment || undefined}
-        items={items.map((i) => ({
-          name: i.name,
-          quantity: i.count,
-          price: i.price,
-        }))}
+        items={confirmationItems}
         totalPrice={totalPrice}
         deliveryPrice={deliveryPrice}
         promocode={promocode || undefined}
