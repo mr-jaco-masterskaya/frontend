@@ -83,7 +83,7 @@ export const InputSearch = <T extends OptionItem>({
 
   return (
     <div ref={rootRef} onKeyDown={handleKeyDown} className="relative">
-      <div className="relative rounded-full bg-bg-base-light text-text-secondary">
+      <div className="relative rounded-xl bg-bg-base-light text-text-secondary">
         <Image
           src="/icons/search.svg"
           alt=""
