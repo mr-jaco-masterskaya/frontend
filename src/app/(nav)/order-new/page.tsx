@@ -182,6 +182,7 @@ export default function CurrentOrderPage() {
             apartment: delivery.apartment || undefined,
             entrance: delivery.entrance || undefined,
             floor: delivery.floor || undefined,
+            domTrue: delivery.intercom === "working" ? true : delivery.intercom === "not-working" ? false : undefined,
             comment: payment.comment || undefined,
             isMain: false,
           });
@@ -210,6 +211,9 @@ export default function CurrentOrderPage() {
           ? toPreorderAt(time.date, time.time) ?? undefined
           : undefined,
         ...paymentResult.fields,
+        fakeDom: deliveryType === "delivery" && delivery.intercom !== null
+          ? delivery.intercom === "working"
+          : undefined,
         items: items.map((item) => ({ itemId: Number(item.id), quantity: item.count })),
       });
       setConfirmedOrderNumber(confirmedOrder.chefOrderId ?? confirmedOrder.id);

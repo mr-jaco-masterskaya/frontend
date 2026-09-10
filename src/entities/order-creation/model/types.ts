@@ -72,6 +72,8 @@ export type OrderDraftInput = {
   paymentType?: 1;
   /** Cash tendered by the customer, in whole rubles. */
   sdacha?: number;
+  /** Operator-selected house/intercom verification for delivery orders. */
+  fakeDom?: boolean;
 };
 
 export type OrderDraft = {

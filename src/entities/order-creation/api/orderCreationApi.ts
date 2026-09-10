@@ -47,6 +47,7 @@ export const orderCreationApi = {
       ...(input.preorderAt ? { preorder_at: input.preorderAt } : {}),
       ...(input.paymentType === undefined ? {} : { payment_type: input.paymentType }),
       ...(input.sdacha === undefined ? {} : { sdacha: input.sdacha }),
+      ...(input.fakeDom === undefined ? {} : { fake_dom: input.fakeDom }),
     } });
     return mapDraft(response.data);
   },
