@@ -8,7 +8,7 @@ import { InputPhone } from "@/features/Inputs/ui/InputPhone/InputPhone"
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Text } from "@/shared/ui/Typography/Typography";
-import { citiesApi } from "@/entities/city/api/citiesApi";
+import { useOrderCreationCity } from "@/entities/order-creation/api/orderCreationQueries";
 import { promoApi } from "@/entities/promo/api/promoApi";
 import { customerApi } from "@/entities/customer/api/customerApi";
 import { CustomerCreateModal } from "../CustomerCreateModal/CustomerCreateModal";
@@ -28,29 +28,17 @@ export const HeaderNewOrder = () => {
   } = useOrderStore();
 
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [cityOptions, setCityOptions] = useState<string[]>([]);
-  const [cityId, setCityId] = useState<number | null>(null);
+  const { data: cities, city: selectedCity, cityId } = useOrderCreationCity(city);
   const [promoDescription, setPromoDescription] = useState<string | null>(null);
   const [promoValid, setPromoValid] = useState<boolean | null>(null);
   const [customerCreateOpen, setCustomerCreateOpen] = useState(false);
   const [customerStatus, setCustomerStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    citiesApi.list().then((cities) => {
-      if (cancelled) return;
-      setCityOptions(cities.map((item) => item.name));
-      const selected = cities.find((item) => item.name === city) ?? cities[0];
-      if (selected) {
-        setCityId(selected.id);
-        setStoreCityId(selected.id);
-        if (selected.name !== city) setCity(selected.name);
-      }
-    }).catch(() => {
-      if (!cancelled) setCityOptions([]);
-    });
-    return () => { cancelled = true; };
-  }, [city, setCity, setStoreCityId]);
+    if (!selectedCity) return;
+    setStoreCityId(selectedCity.id);
+    if (selectedCity.name !== city) setCity(selectedCity.name);
+  }, [city, selectedCity, setCity, setStoreCityId]);
 
   const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
@@ -103,7 +91,7 @@ export const HeaderNewOrder = () => {
   return (
     <form onSubmit={handleSubmit} className="current-order__header">
       <div className="current-order__header-row">
-        <SelectTown value={city} options={cityOptions} onSelect={(value) => { setCity(value); setPromoValid(null); setPromoDescription(null); }} className="current-order__header-city"/>
+        <SelectTown value={city} options={cities?.map((item) => item.name) ?? []} onSelect={(value) => { setCity(value); setPromoValid(null); setPromoDescription(null); }} className="current-order__header-city"/>
 
         <div className="current-order__header-phone">
           <InputPhone

@@ -3,7 +3,7 @@ import { CardsDish } from "@/widgets/CardsDish/ui/CardsDish"
 import { Categories } from "@/widgets/Categories/ui/Categories/Categories"
 import { useOrderStore } from "@/entities/Order/store/new-order/orderStore"
 import { useMemo, useState } from "react"
-import { useOrderCreationCatalogQuery, useOrderCreationCitiesQuery } from "@/entities/order-creation/api/orderCreationQueries"
+import { useOrderCreationCatalogQuery, useOrderCreationCity } from "@/entities/order-creation/api/orderCreationQueries"
 import { mapCatalogCategories, mapCatalogDishes } from "@/entities/order-creation/model/catalogView"
 import { Text } from "@/shared/ui/Typography/Typography"
 
@@ -12,8 +12,8 @@ export const OrderCatalogStep = () => {
   const city = useOrderStore((s) => s.city);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const citiesQuery = useOrderCreationCitiesQuery();
-  const cityId = citiesQuery.data?.find((item) => item.name === city)?.id ?? citiesQuery.data?.[0]?.id ?? null;
+  const citiesQuery = useOrderCreationCity(city);
+  const cityId = citiesQuery.cityId;
   const catalogQuery = useOrderCreationCatalogQuery(cityId);
   const categories = useMemo(() => catalogQuery.data?.categories.map(mapCatalogCategories) ?? [], [catalogQuery.data]);
   const catalogDishes = useMemo(() => catalogQuery.data ? mapCatalogDishes(catalogQuery.data) : [], [catalogQuery.data]);

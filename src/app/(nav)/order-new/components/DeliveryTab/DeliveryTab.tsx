@@ -7,8 +7,8 @@ import { DeliveryTabProps } from "./DeliveryTab.types";
 import "./DeliveryTab.style.css";
 import { useOrderStore } from "@/entities/Order/store/new-order/orderStore";
 import { useRouter } from "next/navigation";
-import { citiesApi } from "@/entities/city/api/citiesApi";
 import { deliveryApi } from "@/entities/delivery/api/deliveryApi";
+import { useOrderCreationCity } from "@/entities/order-creation/api/orderCreationQueries";
 
 export const DeliveryTab = ({ activeTimeTab, setActiveTimeTab }: DeliveryTabProps ) => {
   const delivery = useOrderStore((s) => s.delivery);
@@ -16,7 +16,7 @@ export const DeliveryTab = ({ activeTimeTab, setActiveTimeTab }: DeliveryTabProp
 
   const { address, building, entrance, floor, apartment, intercom, addressCheckStatus } = delivery;
   const city = useOrderStore((s) => s.city);
-  const [cityId, setCityId] = useState<number | null>(null);
+  const { cityId } = useOrderCreationCity(city);
   const [validating, setValidating] = useState(false);
 
   const buildingRef = useRef<HTMLInputElement>(null);
@@ -27,17 +27,6 @@ export const DeliveryTab = ({ activeTimeTab, setActiveTimeTab }: DeliveryTabProp
       buildingRef.current?.focus();
     }
   }, [addressCheckStatus]);
-
-  useEffect(() => {
-    let cancelled = false;
-    citiesApi.list().then((cities) => {
-      if (cancelled) return;
-      setCityId(cities.find((item) => item.name === city)?.id ?? cities[0]?.id ?? null);
-    }).catch(() => {
-      if (!cancelled) setCityId(null);
-    });
-    return () => { cancelled = true; };
-  }, [city]);
 
   const validateAddress = async () => {
     const parsedAddress = splitStreetAndHome(address);
