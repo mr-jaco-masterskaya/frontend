@@ -21,6 +21,7 @@ import { pointsApi } from "@/entities/point/api/pointsApi";
 import { normalizeHome, splitStreetAndHome } from "./model/orderAddress";
 import { toPreorderAt } from "./model/orderSchedule";
 import { validateDeliveryDetails } from "./model/orderDelivery";
+import { paymentDraftFields } from "./model/orderPayment";
 
 export default function CurrentOrderPage() {
   const step = useOrderStore((s) => s.step);
@@ -73,6 +74,8 @@ export default function CurrentOrderPage() {
       }));
 
   const validateBeforeConfirmation = (): string | null => {
+    const paymentResult = paymentDraftFields(payment.method, payment.cashAmount);
+    if (!paymentResult.valid) return paymentResult.message;
     if (deliveryType !== "delivery") return null;
     const result = validateDeliveryDetails({
       address: delivery.address,
@@ -135,6 +138,11 @@ export default function CurrentOrderPage() {
       return;
     }
     const typeOrder = deliveryType === "delivery" ? 1 : 2;
+    const paymentResult = paymentDraftFields(payment.method, payment.cashAmount);
+    if (!paymentResult.valid) {
+      setConfirmError(paymentResult.message);
+      return;
+    }
     setIsSubmitting(true);
     try {
       const selectedCityId = cityId ?? (await citiesApi.list()).find((city) => city.name === useOrderStore.getState().city)?.id;
@@ -201,6 +209,7 @@ export default function CurrentOrderPage() {
         preorderAt: timeMode === "by-time" && time.isTimeSaved
           ? toPreorderAt(time.date, time.time) ?? undefined
           : undefined,
+        ...paymentResult.fields,
         items: items.map((item) => ({ itemId: Number(item.id), quantity: item.count })),
       });
       setConfirmedOrderNumber(confirmedOrder.chefOrderId ?? confirmedOrder.id);

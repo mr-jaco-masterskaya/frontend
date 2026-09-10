@@ -45,6 +45,8 @@ export const orderCreationApi = {
       ...(input.phone ? { phone: input.phone } : {}),
       ...(input.comment ? { comment: input.comment } : {}),
       ...(input.preorderAt ? { preorder_at: input.preorderAt } : {}),
+      ...(input.paymentType === undefined ? {} : { payment_type: input.paymentType }),
+      ...(input.sdacha === undefined ? {} : { sdacha: input.sdacha }),
     } });
     return mapDraft(response.data);
   },

@@ -68,6 +68,10 @@ export type OrderDraftInput = {
   phone?: string;
   comment?: string;
   preorderAt?: string;
+  /** Chef payment type. The current API accepts cash (1) only. */
+  paymentType?: 1;
+  /** Cash tendered by the customer, in whole rubles. */
+  sdacha?: number;
 };
 
 export type OrderDraft = {
