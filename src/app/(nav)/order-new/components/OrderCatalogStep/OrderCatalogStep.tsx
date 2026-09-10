@@ -5,8 +5,6 @@ import { useOrderStore } from "@/entities/Order/store/new-order/orderStore"
 import { useMemo, useState } from "react"
 import { useOrderCreationCatalogQuery, useOrderCreationCitiesQuery } from "@/entities/order-creation/api/orderCreationQueries"
 import { mapCatalogCategories, mapCatalogDishes } from "@/entities/order-creation/model/catalogView"
-import { ModalSaucesUtensils } from "@/features/order/ModalSaucesUtensils/ModalSaucesUtensils"
-import { mockSaucesUtensils, SAUCES_UTENSILS_CATEGORY_ID } from "@/app/(nav)/order-new/data/mocks"
 import { Text } from "@/shared/ui/Typography/Typography"
 
 export const OrderCatalogStep = () => {
@@ -14,7 +12,6 @@ export const OrderCatalogStep = () => {
   const city = useOrderStore((s) => s.city);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSaucesModalOpen, setIsSaucesModalOpen] = useState(false);
   const citiesQuery = useOrderCreationCitiesQuery();
   const cityId = citiesQuery.data?.find((item) => item.name === city)?.id ?? citiesQuery.data?.[0]?.id ?? null;
   const catalogQuery = useOrderCreationCatalogQuery(cityId);
@@ -36,22 +33,7 @@ export const OrderCatalogStep = () => {
 
   const handleCategorySelect = (id: string | number) => {
     const categoryId = String(id);
-    if (categoryId === SAUCES_UTENSILS_CATEGORY_ID) {
-      setIsSaucesModalOpen(true);
-      return;
-    }
     setSelectedCategory((prev) => (prev === categoryId ? null : categoryId));
-  };
-
-  const handleSaucesDone = (
-    items: { id: string; name: string; price: number; count: number }[],
-  ) => {
-    items.forEach((item) => {
-      for (let i = 0; i < item.count; i += 1) {
-        addItem({ id: item.id, name: item.name, price: item.price });
-      }
-    });
-    setIsSaucesModalOpen(false);
   };
 
   return (
@@ -65,14 +47,6 @@ export const OrderCatalogStep = () => {
         />
       </div>
       <div className="current-order__cards"><CardsDish dishes={dishes} /></div>
-
-      <ModalSaucesUtensils
-        isOpen={isSaucesModalOpen}
-        onClose={() => setIsSaucesModalOpen(false)}
-        onSkip={() => setIsSaucesModalOpen(false)}
-        onDone={handleSaucesDone}
-        items={mockSaucesUtensils}
-      />
     </>
   )
 }
