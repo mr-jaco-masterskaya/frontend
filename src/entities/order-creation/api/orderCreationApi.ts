@@ -43,6 +43,7 @@ export const orderCreationApi = {
       ...(input.addressId === undefined ? {} : { address_id: input.addressId }),
       ...(input.promoCode ? { promo_code: input.promoCode } : {}),
       ...(input.phone ? { phone: input.phone } : {}),
+      ...(input.comment ? { comment: input.comment } : {}),
       ...(input.preorderAt ? { preorder_at: input.preorderAt } : {}),
     } });
     return mapDraft(response.data);

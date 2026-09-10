@@ -126,6 +126,7 @@ export default function CurrentOrderPage() {
         streetId: deliveryType === "delivery" ? selectedStreetId : undefined,
         promoCode: promocode || undefined,
         phone: phone || undefined,
+        comment: payment.comment || undefined,
         items: items.map((item) => ({ itemId: Number(item.id), quantity: item.count })),
       });
       setConfirmedOrderNumber(confirmedOrder.chefOrderId ?? confirmedOrder.id);

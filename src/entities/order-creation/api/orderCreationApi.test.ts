@@ -26,9 +26,10 @@ describe('orderCreationApi', () => {
       .mockResolvedValueOnce(json({ st: true, data: { ...draft, status: 'confirmed' } }));
     vi.stubGlobal('fetch', fetchMock);
 
-    await expect(orderCreationApi.createDraft({ cityId: 7, pointId: 4, customerId: 9, typeOrder: 1 })).resolves.toMatchObject({ id: 44, status: 'draft' });
+    await expect(orderCreationApi.createDraft({ cityId: 7, pointId: 4, customerId: 9, typeOrder: 1, comment: 'Позвонить за час' })).resolves.toMatchObject({ id: 44, status: 'draft' });
     await expect(orderCreationApi.confirmDraft(44, 'idempotency-44')).resolves.toMatchObject({ id: 44, status: 'confirmed' });
     expect((fetchMock.mock.calls[1][1].headers as Headers).get('Idempotency-Key')).toBe('idempotency-44');
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ comment: 'Позвонить за час' });
   });
 
   it('runs cart replacement, draft validation, and confirmation in order', async () => {

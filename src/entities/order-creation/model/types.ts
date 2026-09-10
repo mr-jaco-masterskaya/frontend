@@ -12,6 +12,7 @@ export type OrderCreationContext = {
   promoCode?: string;
   customerId?: number;
   phone?: string;
+  comment?: string;
 };
 
 export type ValidatedCart = {
