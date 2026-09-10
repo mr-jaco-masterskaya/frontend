@@ -20,6 +20,7 @@ import { customerApi } from "@/entities/customer/api/customerApi";
 import { deliveryApi } from "@/entities/delivery/api/deliveryApi";
 import { citiesApi } from "@/entities/city/api/citiesApi";
 import { pointsApi } from "@/entities/point/api/pointsApi";
+import { normalizeHome, splitStreetAndHome } from "./model/orderAddress";
 
 export default function CurrentOrderPage() {
   const step = useOrderStore((s) => s.step);
@@ -300,16 +301,4 @@ export default function CurrentOrderPage() {
       />
     </div>
   );
-}
-
-function splitStreetAndHome(value: string): { street: string; home: string } | null {
-  const normalized = value.trim().replace(/,\s*$/, "");
-  const match = normalized.match(/^(.+?)[,\s]+(\d+[А-Яа-яA-Za-z]?(?:[/-]\d+[А-Яа-яA-Za-z]?)?)$/);
-  if (!match) return null;
-  const street = match[1].trim().replace(/,\s*$/, "").trim();
-  return street ? { street, home: match[2] } : null;
-}
-
-function normalizeHome(value: string): string {
-  return value.trim().toLowerCase().replace(/\s+/g, "");
 }
