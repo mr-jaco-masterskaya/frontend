@@ -12,7 +12,6 @@ export type OrderCreationContext = {
   promoCode?: string;
   customerId?: number;
   phone?: string;
-  comment?: string;
 };
 
 export type ValidatedCart = {
@@ -35,6 +34,7 @@ export type OrderDraftInput = {
   addressId?: number;
   promoCode?: string;
   phone?: string;
+  comment?: string;
   preorderAt?: string;
 };
 
