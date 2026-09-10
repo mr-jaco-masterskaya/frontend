@@ -21,7 +21,6 @@ import { pointsApi } from "@/entities/point/api/pointsApi";
 import { normalizeHome, splitStreetAndHome } from "./model/orderAddress";
 import { toPreorderAt } from "./model/orderSchedule";
 import { validateDeliveryDetails } from "./model/orderDelivery";
-import { addressWriteForIntercom, changedIntercomFields } from "./model/orderAddressPersistence";
 
 export default function CurrentOrderPage() {
   const step = useOrderStore((s) => s.step);
@@ -168,7 +167,6 @@ export default function CurrentOrderPage() {
         );
         selectedAddressId = selectedAddressId ?? matchingAddress?.id ?? null;
         selectedPointId = selectedPointId ?? matchingAddress?.delivery.pointId ?? null;
-        const selectedSavedAddress = customerAddresses.find((savedAddress) => savedAddress.id === selectedAddressId);
         if (!selectedAddressId && selectedStreetId) {
           const createdAddress = await customerApi.createAddress(selectedCustomerId, {
             cityId: selectedCityId,
@@ -176,7 +174,6 @@ export default function CurrentOrderPage() {
             apartment: delivery.apartment || undefined,
             entrance: delivery.entrance || undefined,
             floor: delivery.floor || undefined,
-            ...addressWriteForIntercom(delivery.intercom),
             comment: payment.comment || undefined,
             isMain: false,
           });
@@ -184,12 +181,6 @@ export default function CurrentOrderPage() {
           selectedPointId = selectedPointId ?? createdAddress.delivery.pointId;
         }
         if (!selectedAddressId) throw new Error("Не удалось сохранить адрес клиента");
-        const intercomUpdate = changedIntercomFields(selectedSavedAddress, delivery.intercom);
-        if (selectedSavedAddress && Object.keys(intercomUpdate).length > 0) {
-          await customerApi.updateAddress(selectedCustomerId, selectedSavedAddress.id, {
-            ...intercomUpdate,
-          });
-        }
       } else if (!selectedPointId) {
         const points = await pointsApi.list(selectedCityId);
         selectedPointId = points.find((point) => point.address === pickup.cafe || point.name === pickup.cafe)?.id ?? null;
