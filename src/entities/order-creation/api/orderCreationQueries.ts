@@ -5,7 +5,7 @@ import type { City } from '@/entities/city/model/types';
 
 export const orderCreationQueryKeys = {
   cities: ['order-creation', 'cities'] as const,
-  catalog: (cityId: number) => ['order-creation', 'catalog', cityId] as const,
+  catalog: (cityId: number, pointId?: number | null) => ['order-creation', 'catalog', cityId, pointId ?? null] as const,
 };
 
 export function useOrderCreationCitiesQuery() {
@@ -27,10 +27,10 @@ export function useOrderCreationCity(cityName: string) {
   };
 }
 
-export function useOrderCreationCatalogQuery(cityId: number | null) {
+export function useOrderCreationCatalogQuery(cityId: number | null, pointId?: number | null) {
   return useQuery({
-    queryKey: orderCreationQueryKeys.catalog(cityId ?? 0),
-    queryFn: () => catalogApi.get(cityId as number),
+    queryKey: orderCreationQueryKeys.catalog(cityId ?? 0, pointId),
+    queryFn: () => catalogApi.get(cityId as number, pointId ?? undefined),
     enabled: cityId !== null,
   });
 }

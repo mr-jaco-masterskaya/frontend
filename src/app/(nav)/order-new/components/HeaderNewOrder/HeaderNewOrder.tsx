@@ -6,7 +6,7 @@ import { useOrderStore } from "@/entities/Order/store/new-order/orderStore"
 import { SelectTown } from "@/shared/ui/SelectTown/SelectTown"
 import { InputPhone } from "@/features/Inputs/ui/InputPhone/InputPhone"
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Text } from "@/shared/ui/Typography/Typography";
 import { useOrderCreationCity } from "@/entities/order-creation/api/orderCreationQueries";
 import { promoApi } from "@/entities/promo/api/promoApi";
@@ -33,6 +33,8 @@ export const HeaderNewOrder = () => {
   const [promoValid, setPromoValid] = useState<boolean | null>(null);
   const [customerCreateOpen, setCustomerCreateOpen] = useState(false);
   const [customerStatus, setCustomerStatus] = useState<string | null>(null);
+  const [customerLookupLoading, setCustomerLookupLoading] = useState(false);
+  const lookupRequest = useRef(0);
 
   useEffect(() => {
     if (!selectedCity) return;
@@ -40,22 +42,47 @@ export const HeaderNewOrder = () => {
     if (selectedCity.name !== city) setCity(selectedCity.name);
   }, [city, selectedCity, setCity, setStoreCityId]);
 
+  useEffect(() => () => {
+    lookupRequest.current += 1;
+  }, []);
+
+  const handlePhoneChange = (value: string) => {
+    lookupRequest.current += 1;
+    setPhone(value);
+    setCustomerId(null);
+    setAddressId(null);
+    setCustomerStatus(null);
+    setCustomerLookupLoading(false);
+  };
+
   const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
+    const phoneSnapshot = phone.trim();
+    const citySnapshot = cityId;
+    const requestId = ++lookupRequest.current;
     setCustomerId(null);
-    if (phone.trim()) {
-      void customerApi.lookup(phone.trim(), cityId ?? undefined).then((result) => {
+    setAddressId(null);
+    setCustomerStatus(null);
+    if (phoneSnapshot) {
+      setCustomerLookupLoading(true);
+      void customerApi.lookup(phoneSnapshot, citySnapshot ?? undefined).then((result) => {
+        if (requestId !== lookupRequest.current || phoneSnapshot !== useOrderStore.getState().phone || citySnapshot !== useOrderStore.getState().cityId) return;
         setCustomerId(result.customer?.id ?? null);
         setCustomerStatus(result.customer ? `Клиент найден: ${result.customer.name || result.customer.phone}` : 'Клиент не найден');
-        const address = result.addresses.find((item) => item.cityId === cityId) ?? result.addresses[0];
+        const address = result.addresses.find((item) => item.cityId === citySnapshot) ?? result.addresses[0];
         setAddressId(address?.id ?? null);
         if (!result.customer) setCustomerCreateOpen(true);
       }).catch(() => {
+        if (requestId !== lookupRequest.current || phoneSnapshot !== useOrderStore.getState().phone) return;
         setCustomerId(null);
         setAddressId(null);
         setCustomerStatus('Не удалось проверить клиента');
+      }).finally(() => {
+        if (requestId === lookupRequest.current) setCustomerLookupLoading(false);
       });
+    } else {
+      setCustomerLookupLoading(false);
     }
     if (!promocode.trim() || cityId === null) {
       setPromoValid(null);
@@ -91,12 +118,21 @@ export const HeaderNewOrder = () => {
   return (
     <form onSubmit={handleSubmit} className="current-order__header">
       <div className="current-order__header-row">
-        <SelectTown value={city} options={cities?.map((item) => item.name) ?? []} onSelect={(value) => { setCity(value); setPromoValid(null); setPromoDescription(null); }} className="current-order__header-city"/>
+        <SelectTown value={city} options={cities?.map((item) => item.name) ?? []} onSelect={(value) => {
+          lookupRequest.current += 1;
+          setCity(value);
+          setCustomerId(null);
+          setAddressId(null);
+          setCustomerStatus(null);
+          setCustomerLookupLoading(false);
+          setPromoValid(null);
+          setPromoDescription(null);
+        }} className="current-order__header-city"/>
 
         <div className="current-order__header-phone">
           <InputPhone
             value={phone}
-            onChange={setPhone}
+            onChange={handlePhoneChange}
             placeholder="999 999-99-99"
           />
           {customerStatus && <span className="current-order__header-customer-status" role="status">{customerStatus}</span>}
@@ -107,8 +143,8 @@ export const HeaderNewOrder = () => {
           </Tooltip>
         </div>
 
-        <Button type="submit" variant="base" theme="primary" className="current-order__header-button">
-          Найти
+        <Button type="submit" variant="base" theme="primary" className="current-order__header-button" disabled={customerLookupLoading} aria-busy={customerLookupLoading}>
+          {customerLookupLoading ? "Проверка…" : "Найти"}
         </Button>
       </div>
       <CustomerCreateModal

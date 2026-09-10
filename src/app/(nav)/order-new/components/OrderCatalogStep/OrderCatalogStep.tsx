@@ -10,11 +10,15 @@ import { Text } from "@/shared/ui/Typography/Typography"
 export const OrderCatalogStep = () => {
   const addItem = useOrderStore((s) => s.addItem);
   const city = useOrderStore((s) => s.city);
+  const deliveryType = useOrderStore((s) => s.deliveryType);
+  const deliveryPointId = useOrderStore((s) => s.delivery.pointId);
+  const pickupPointId = useOrderStore((s) => s.pointId);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const citiesQuery = useOrderCreationCity(city);
   const cityId = citiesQuery.cityId;
-  const catalogQuery = useOrderCreationCatalogQuery(cityId);
+  const pointId = deliveryType === "delivery" ? deliveryPointId : pickupPointId;
+  const catalogQuery = useOrderCreationCatalogQuery(cityId, pointId);
   const categories = useMemo(() => catalogQuery.data?.categories.map(mapCatalogCategories) ?? [], [catalogQuery.data]);
   const catalogDishes = useMemo(() => catalogQuery.data ? mapCatalogDishes(catalogQuery.data) : [], [catalogQuery.data]);
   const loading = citiesQuery.isLoading || catalogQuery.isLoading;

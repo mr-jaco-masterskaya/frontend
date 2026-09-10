@@ -1,15 +1,20 @@
-import type { OrderDraft, ValidatedCart } from '../model/types';
+import type { OrderDraft, ValidatedCart, ValidatedCartItem, ValidatedCartModifier, ValidatedPromo } from '../model/types';
+
+type ModifierDto = { item_id: number; name?: string; quantity: number; unit_price?: number; total?: number; billable?: boolean };
+type CartItemDto = { item_id: number; name?: string; quantity: number; unit_price?: number; total?: number; modifiers?: ModifierDto[]; modifier_total?: number; fixed_price?: boolean; promo_addition?: boolean };
+type PromoDto = { id?: number; code?: string; name?: string; text?: string; condition_text?: string; free_drive?: boolean; effect?: { additions?: CartItemDto[] } };
 
 export type CartDto = {
   city_id: number;
   point_id?: number | null;
   valid?: boolean;
-  items?: Array<{ item_id: number; name?: string; quantity: number; unit_price?: number; total?: number }>;
+  items?: CartItemDto[];
   subtotal?: number;
   discount?: number;
   total?: number;
   delivery?: { point_id: number; sum_div?: number; free_drive?: boolean; fee?: number } | null;
   errors?: Array<{ code?: string; text?: string; item_id?: number }>;
+  promo?: PromoDto | null;
 };
 
 export type DraftDto = {
@@ -23,21 +28,29 @@ export type DraftDto = {
   cart: CartDto;
 };
 
+function mapModifier(value: ModifierDto): ValidatedCartModifier {
+  return { itemId: Number(value.item_id), name: String(value.name ?? ''), quantity: Number(value.quantity), unitPrice: Number(value.unit_price ?? 0), total: Number(value.total ?? 0), billable: Boolean(value.billable) };
+}
+
+function mapCartItem(value: CartItemDto): ValidatedCartItem {
+  return { itemId: Number(value.item_id), name: String(value.name ?? ''), quantity: Number(value.quantity), unitPrice: Number(value.unit_price ?? 0), total: Number(value.total ?? 0), modifiers: (value.modifiers ?? []).map(mapModifier), modifierTotal: Number(value.modifier_total ?? 0), fixedPrice: Boolean(value.fixed_price), promoAddition: Boolean(value.promo_addition) };
+}
+
+function mapPromo(value: PromoDto | null | undefined): ValidatedPromo | null {
+  if (!value) return null;
+  return { id: Number(value.id ?? 0), code: String(value.code ?? ''), name: String(value.name ?? ''), text: String(value.text ?? ''), conditionText: String(value.condition_text ?? ''), freeDrive: Boolean(value.free_drive), additions: (value.effect?.additions ?? []).map(mapCartItem) };
+}
+
 export function mapValidatedCart(value: CartDto): ValidatedCart {
   return {
     cityId: Number(value.city_id),
     pointId: value.point_id == null ? null : Number(value.point_id),
     valid: Boolean(value.valid),
-    items: (value.items ?? []).map((item) => ({
-      itemId: Number(item.item_id),
-      name: String(item.name ?? ''),
-      quantity: Number(item.quantity),
-      unitPrice: Number(item.unit_price ?? 0),
-      total: Number(item.total ?? 0),
-    })),
+    items: (value.items ?? []).map(mapCartItem),
     subtotal: Number(value.subtotal ?? 0),
     discount: Number(value.discount ?? 0),
     total: Number(value.total ?? 0),
+    promo: mapPromo(value.promo),
     delivery: value.delivery === null || value.delivery === undefined ? null : {
       pointId: Number(value.delivery.point_id),
       sumDiv: Number(value.delivery.sum_div ?? 0),
