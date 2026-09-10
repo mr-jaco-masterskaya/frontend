@@ -12,8 +12,9 @@ import { DeliveryForm } from "./components/DeliveryForm/DeliveryForm";
 import "./CurrentOrderPage.styles.css";
 import { HeaderNewOrder } from "./components/HeaderNewOrder/HeaderNewOrder";
 import { OrderCatalogStep } from "./components/OrderCatalogStep/OrderCatalogStep";
-import { cafes } from "../delivery-map/data/constants";
 import { submitOrder } from "@/entities/order-creation/api/orderCreationWorkflow";
+import { orderCreationApi } from "@/entities/order-creation/api/orderCreationApi";
+import type { ValidatedCart } from "@/entities/order-creation/model/types";
 import { ApiError } from "@/shared/api/http";
 import { customerApi } from "@/entities/customer/api/customerApi";
 import { deliveryApi } from "@/entities/delivery/api/deliveryApi";
@@ -47,19 +48,48 @@ export default function CurrentOrderPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [confirmedOrderNumber, setConfirmedOrderNumber] = useState<number | null>(null);
+  const [validatedCart, setValidatedCart] = useState<ValidatedCart | null>(null);
 
-  const deliveryPrice = (() => {
-    if (deliveryType !== "delivery") return 0;
-    const cafe = cafes.find((c) => c.id === delivery.cafeId);
-    return cafe?.deliveryPrice ?? 0;
-  })();
+  const deliveryPrice = validatedCart?.delivery?.fee ?? 0;
 
   const itemsTotal = items.reduce(
     (acc, item) => acc + item.price * item.count,
     0,
   );
 
-  const totalPrice = itemsTotal + deliveryPrice;
+  const totalPrice = validatedCart?.total ?? itemsTotal + deliveryPrice;
+
+  const prepareConfirmation = async () => {
+    const selectedCityId = cityId;
+    const selectedPointId = deliveryType === "delivery" ? delivery.pointId : pointId;
+    if (!selectedCityId || !selectedPointId || items.length === 0) {
+      setValidatedCart(null);
+      setIsConfirmOpen(true);
+      return;
+    }
+    setIsSubmitting(true);
+    setConfirmError(null);
+    try {
+      const cart = await orderCreationApi.validateCart({
+        cityId: selectedCityId,
+        pointId: selectedPointId,
+        typeOrder: deliveryType === "delivery" ? 1 : 2,
+        streetId: deliveryType === "delivery" ? delivery.streetId ?? undefined : undefined,
+        promoCode: promocode || undefined,
+        customerId: customerId ?? undefined,
+        phone: phone || undefined,
+        items: items.map((item) => ({ itemId: Number(item.id), quantity: item.count })),
+      });
+      setValidatedCart(cart);
+      if (!cart.valid) setConfirmError("Корзина изменилась. Проверьте состав заказа");
+    } catch (error) {
+      setValidatedCart(null);
+      setConfirmError(error instanceof Error ? error.message : "Не удалось проверить корзину");
+    } finally {
+      setIsSubmitting(false);
+      setIsConfirmOpen(true);
+    }
+  };
 
   const handleConfirm = async () => {
     setConfirmError(null);
@@ -226,7 +256,7 @@ export default function CurrentOrderPage() {
             return;
           }
           setConfirmedOrderNumber(null);
-          setIsConfirmOpen(true);
+          void prepareConfirmation();
         }}
       />
 
