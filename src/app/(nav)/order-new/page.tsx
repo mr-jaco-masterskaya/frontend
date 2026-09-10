@@ -21,6 +21,7 @@ import { deliveryApi } from "@/entities/delivery/api/deliveryApi";
 import { citiesApi } from "@/entities/city/api/citiesApi";
 import { pointsApi } from "@/entities/point/api/pointsApi";
 import { normalizeHome, splitStreetAndHome } from "./model/orderAddress";
+import { toPreorderAt } from "./model/orderSchedule";
 
 export default function CurrentOrderPage() {
   const step = useOrderStore((s) => s.step);
@@ -158,6 +159,9 @@ export default function CurrentOrderPage() {
         promoCode: promocode || undefined,
         phone: phone || undefined,
         comment: payment.comment || undefined,
+        preorderAt: timeMode === "by-time" && time.isTimeSaved
+          ? toPreorderAt(time.date, time.time) ?? undefined
+          : undefined,
         items: items.map((item) => ({ itemId: Number(item.id), quantity: item.count })),
       });
       setConfirmedOrderNumber(confirmedOrder.chefOrderId ?? confirmedOrder.id);
