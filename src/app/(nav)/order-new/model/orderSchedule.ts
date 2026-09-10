@@ -22,3 +22,12 @@ export function toPreorderAt(date: string, time: string): string | null {
 
   return `${year}-${month}-${day} ${startHour}:${startMinute}`;
 }
+
+export function toPreorderDate(date: string): string | null {
+  const match = DATE_PATTERN.exec(date.trim());
+  if (!match) return null;
+  const [, day, month, year] = match;
+  const parsedDate = new Date(Number(year), Number(month) - 1, Number(day));
+  if (parsedDate.getFullYear() !== Number(year) || parsedDate.getMonth() !== Number(month) - 1 || parsedDate.getDate() !== Number(day)) return null;
+  return `${year}-${month}-${day}`;
+}

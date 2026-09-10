@@ -6,10 +6,29 @@ import "./ModalTimeSelect.style.css";
 import { ModalTimeSelectProps } from "./ModalTimeSelect.types";
 import { timeSlots } from "../../utils/mocks";
 import { Slot } from "../Slot/Slot";
+import type { PreorderSlot } from "@/entities/delivery/model/types";
 
-export const ModalTimeSelect = ({ isOpen, onClose, onTimeSelect }: ModalTimeSelectProps) => {
-  const [activeDayPeriod, setActiveDayPeriod] = useState<"morning" | "day" | "evening" | null>(null);
+type DayPeriod = "morning" | "day" | "evening";
+
+const getPeriod = (slot: PreorderSlot): DayPeriod | null => {
+  const hour = Number((slot.start ?? String(slot.value)).slice(0, 2));
+  if (!Number.isFinite(hour)) return null;
+  if (hour < 12) return "morning";
+  if (hour < 18) return "day";
+  return "evening";
+};
+
+const displaySlot = (slot: PreorderSlot) =>
+  slot.label || (slot.start && slot.end ? `${slot.start} - ${slot.end}` : String(slot.value));
+
+export const ModalTimeSelect = ({ isOpen, onClose, onTimeSelect, slots, isLoading = false, error = null }: ModalTimeSelectProps) => {
+  const [activeDayPeriod, setActiveDayPeriod] = useState<DayPeriod | null>(null);
   const [activeTimePeriod, setActiveTimePeriod] = useState<string | null>(null);
+  const periodSlots = slots?.filter((slot) => slot.start && slot.end).reduce<Record<DayPeriod, PreorderSlot[]>>((result, slot) => {
+    const period = getPeriod(slot);
+    if (period) result[period].push(slot);
+    return result;
+  }, { morning: [], day: [], evening: [] });
 
   const handleClose = () => {
     setActiveDayPeriod(null);
@@ -57,19 +76,21 @@ export const ModalTimeSelect = ({ isOpen, onClose, onTimeSelect }: ModalTimeSele
         {activeDayPeriod && (
           <div className="time-slots-container">
             <Text variant="label-s-regular-12">Выберите период доставки</Text>
-            <ul className="time-slots-list">
-              {timeSlots[activeDayPeriod].map((slot) => (
-                <li key={slot}>
+            {isLoading && <Text>Загрузка доступного времени…</Text>}
+            {error && <Text>{error}</Text>}
+            {!isLoading && !error && <ul className="time-slots-list">
+              {(periodSlots ? periodSlots[activeDayPeriod].map((slot) => ({ value: `${slot.start} - ${slot.end}`, label: displaySlot(slot), disabled: slot.disabled })) : timeSlots[activeDayPeriod].map((slot) => ({ value: slot, label: slot, disabled: false }))).map((slot) => (
+                <li key={slot.value}>
                   <Slot 
                     variant="timeSlot"
-                    isActive={activeTimePeriod === slot}
-                    onClick={() => setActiveTimePeriod(slot)}
+                    isActive={activeTimePeriod === slot.value}
+                    onClick={() => !slot.disabled && setActiveTimePeriod(slot.value)}
                   >
-                    {slot}
+                    {slot.label}
                   </Slot>
                 </li>
               ))}
-            </ul>
+            </ul>}
             <div className="time-slots-btns-group">
               <Button 
                 variant="base" 
