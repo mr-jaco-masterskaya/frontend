@@ -39,6 +39,7 @@ export type OrderDraftInput = {
 
 export type OrderDraft = {
   id: number;
+  chefOrderId: number | null;
   status: string;
   cityId: number;
   pointId: number;

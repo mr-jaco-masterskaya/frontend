@@ -46,6 +46,7 @@ export default function CurrentOrderPage() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [confirmedOrderNumber, setConfirmedOrderNumber] = useState<number | null>(null);
 
   const deliveryPrice = (() => {
     if (deliveryType !== "delivery") return 0;
@@ -116,7 +117,7 @@ export default function CurrentOrderPage() {
 
       if (!selectedPointId) throw new Error("Не удалось определить точку получения");
 
-      await submitOrder({
+      const confirmedOrder = await submitOrder({
         cityId: selectedCityId,
         pointId: selectedPointId,
         customerId: selectedCustomerId,
@@ -127,6 +128,7 @@ export default function CurrentOrderPage() {
         phone: phone || undefined,
         items: items.map((item) => ({ itemId: Number(item.id), quantity: item.count })),
       });
+      setConfirmedOrderNumber(confirmedOrder.chefOrderId ?? confirmedOrder.id);
       setIsConfirmOpen(false);
       resetOrder();
     } catch (error) {
@@ -222,6 +224,7 @@ export default function CurrentOrderPage() {
             setStep(ORDER_STEP.DELIVERY);
             return;
           }
+          setConfirmedOrderNumber(null);
           setIsConfirmOpen(true);
         }}
       />
@@ -247,7 +250,7 @@ export default function CurrentOrderPage() {
         onConfirm={handleConfirm}
         confirmError={confirmError ?? undefined}
         isConfirming={isSubmitting}
-        title={`Заказ № ${orderNumber} от ${new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}`}
+        title={`Заказ № ${confirmedOrderNumber ?? orderNumber ?? "—"} от ${new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}`}
         deliveryType={deliveryType}
         deliveryTime={deliveryTime}
         clientPhone={`+7 (${phone.slice(0,3)}) ${phone.slice(3,6)}-${phone.slice(6,8)}-${phone.slice(8,10)}`}

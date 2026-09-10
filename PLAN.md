@@ -172,6 +172,18 @@
 - не реализовывать operator status transitions, пока владелец Chef workflow явно не выставит этот API;
 - протестировать draft → confirm/cancel state machine и duplicate submit.
 
+Текущий order-new progress:
+
+- customer lookup и защищённое создание клиента подключены;
+- cart replacement, draft, server validation и idempotent confirmation подключены;
+- подтверждённый `chef_order_id` теперь сохраняется в typed draft result и может
+  использоваться UI вместо случайного номера.
+
+Остаётся убрать presentation-only legacy values из order-new: стоимость доставки,
+время ожидания, stop-state и дополнительные позиции должны приходить из API либо
+явно отображаться как недоступные до server validation. Нельзя оставлять
+случайный order number или считать локальный total подтверждённым.
+
 ### 6. Доставка, промокоды и отображение оплаты
 
 - подключить delivery zones, street search, address validation и preorder slots;

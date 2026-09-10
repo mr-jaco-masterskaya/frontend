@@ -121,7 +121,7 @@ const initialState: OrderState = {
     time: '',
     isTimeSaved: false,
   },
-  orderNumber: Math.floor(800000 + Math.random() * 1000), //мок, заменить
+  orderNumber: null,
 };
 
 type OrderStore = OrderState & OrderActions;

@@ -14,6 +14,7 @@ export type CartDto = {
 
 export type DraftDto = {
   id: number;
+  chef_order_id?: number | null;
   status?: string;
   city_id: number;
   point_id: number;
@@ -54,6 +55,7 @@ export function mapValidatedCart(value: CartDto): ValidatedCart {
 export function mapDraft(value: DraftDto): OrderDraft {
   return {
     id: Number(value.id),
+    chefOrderId: value.chef_order_id == null ? null : Number(value.chef_order_id),
     status: String(value.status ?? 'draft'),
     cityId: Number(value.city_id),
     pointId: Number(value.point_id),
