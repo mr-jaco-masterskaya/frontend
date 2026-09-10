@@ -3,11 +3,9 @@ import { useState } from "react";
 import { useOrderStore } from "@/entities/Order/store/new-order/orderStore";
 import { ORDER_STEP } from "@/utils/constants";
 import { Cart } from "@/widgets/Order/ui/Cart/Cart";
-import { StopOrder } from "@/features/order/ui/StopOrder/StopOrder";
 import { OrderPreviewModal } from "@/features/ModalOrderList/ui/OrderPreviewModal/OrderPreviewModal";
 import { ModalOrderConfirm } from "@/features/order/ModalOrderConfirm/ModalOrderConfirm";
 import { Tab } from "@/shared/ui/Tab/Tab";
-import { mockStopOrders } from "./data/mocks";
 import { DeliveryForm } from "./components/DeliveryForm/DeliveryForm";
 import "./CurrentOrderPage.styles.css";
 import { HeaderNewOrder } from "./components/HeaderNewOrder/HeaderNewOrder";
@@ -216,10 +214,6 @@ export default function CurrentOrderPage() {
     <div className="current-order">
       <main className="current-order__main">
         <HeaderNewOrder/>
-
-        <div className="current-order__stop-order">
-          <StopOrder options={mockStopOrders} />
-        </div>
 
         <p className="current-order__prep-time">Время приготовления от 10 до 15 минут</p>
 
