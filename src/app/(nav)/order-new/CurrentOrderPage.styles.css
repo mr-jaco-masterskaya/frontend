@@ -1,11 +1,12 @@
 @reference "../../../app/globals.css";
 
 .current-order {
-  @apply flex gap-4 h-full min-w-0;
+  @apply grid h-full min-w-0 gap-4;
+  grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
 }
 
 .current-order__main {
-  @apply flex flex-col w-[704px] shrink-0;
+  @apply flex min-w-0 flex-col;
 }
 
 .current-order__stop-order {
@@ -34,4 +35,18 @@
 
 .current-order__cards {
   @apply flex-1 overflow-y-auto overflow-x-hidden;
+}
+
+@media (max-width: 900px) {
+  .current-order {
+    @apply flex flex-col overflow-y-auto;
+  }
+
+  .current-order__main {
+    @apply h-auto min-h-0 w-full shrink-0;
+  }
+
+  .current-order > aside {
+    @apply h-[min(70vh,620px)] min-h-[360px] w-full min-w-0 shrink-0;
+  }
 }
