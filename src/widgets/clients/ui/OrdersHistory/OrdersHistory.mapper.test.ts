@@ -72,4 +72,13 @@ describe("mapOrderDetails", () => {
       items: [],
     });
   });
+
+  it("prefers the server-composed order address when it is available", () => {
+    expect(
+      mapOrderDetails({
+        ...order,
+        type_order_addr_new: "г. Самара, Ленина 10, Пд.: 2, Эт.: 3, Кв.: 4",
+      }).address,
+    ).toBe("г. Самара, Ленина 10, Пд.: 2, Эт.: 3, Кв.: 4");
+  });
 });

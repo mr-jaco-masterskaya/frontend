@@ -21,7 +21,7 @@ export function mapOrderDetails(order: OrderDto): OrderDetailsView {
       order.date_time_order ||
       "Не указано",
     clientPhone: order.phone || "Не указан",
-    address: formatAddress(order.address) || "Не указан",
+    address: order.type_order_addr_new || formatAddress(order.address) || "Не указан",
     intercom: "Не указан",
     payment: order.payment_type === 1 ? "Наличный расчёт" : "Безналичный расчёт",
     comment: order.comment ?? undefined,

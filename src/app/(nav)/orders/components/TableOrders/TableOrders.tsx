@@ -206,7 +206,7 @@ export const TableOrders = ({ orders }: TableOrdersProps) => {
         deliveryType={orderDetails?.type === 2 ? "pickup" : "delivery"}
         deliveryTime={orderDetails?.date_time_preorder || orderDetails?.give_data_time || "Не указано"}
         clientPhone={orderDetails?.phone || selectedOrder?.phone || "Не указан"}
-        address={formatAddress(orderDetails?.address) || selectedOrder?.address || "Не указан"}
+        address={orderDetails?.type_order_addr_new || formatAddress(orderDetails?.address) || selectedOrder?.address || "Не указан"}
         intercom="Не указан"
         payment={paymentLabel(orderDetails?.payment_type)}
         comment={orderDetails?.comment ?? undefined}
