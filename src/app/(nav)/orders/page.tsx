@@ -138,7 +138,7 @@ const mapOrder = (order: OrderDto): Order => ({
   type: TYPE_MAP[order.type] ?? "delivery",
   createdBy: "—",
   phone: order.phone ?? "",
-  address: formatAddress(order.address),
+  address: order.type_order_addr_new || formatAddress(order.address),
   openedAt: formatTime(order.date_time_order),
   dueTime: formatTime(order.date_time_preorder),
   closedAtKitchen: "—",

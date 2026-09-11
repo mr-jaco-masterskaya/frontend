@@ -7,6 +7,9 @@ import { orderStatus, STATUS_TABS } from "@/widgets/orders/utils/constants";
 import { useKitchenStore } from "@/entities/Order/store/kitchen/kitchenStore";
 import { ColumnFilter } from "@/features/orders/ui/ColumnFilter/ColumnFilter";
 import { KitchenOrder, TableKitchenProps } from "./TableKitchen.types";
+import { ModalOrderConfirm } from "@/features/order/ModalOrderConfirm/ModalOrderConfirm";
+import { type OrderDto, ordersApi } from "@/entities/Order/api/ordersApi";
+import { Text } from "@/shared/ui/Typography/Typography";
 
 export const TableKitchen = ({ orders }: TableKitchenProps) => {
   const {
@@ -24,6 +27,10 @@ export const TableKitchen = ({ orders }: TableKitchenProps) => {
   } = useKitchenStore();
 
   const [activeColumn, setActiveColumn] = useState<"status" | "type" | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<KitchenOrder | null>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDto | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
 
   const columns = getKitchenColumns(activeColumn, sortKey, sortDir, toggleSort).filter(
     (col) => visibleColumns[col.title],
@@ -67,6 +74,29 @@ export const TableKitchen = ({ orders }: TableKitchenProps) => {
       ? null
       : filteredOrders.findIndex((order) => order.number === foundOrderNumber);
 
+  const openOrder = async (order: KitchenOrder) => {
+    setSelectedOrder(order);
+    setOrderDetails(null);
+    setDetailsError(null);
+    setDetailsLoading(true);
+
+    try {
+      const { data } = await ordersApi.kitchenShow(order.id);
+      setOrderDetails(data);
+    } catch (error) {
+      setDetailsError(error instanceof Error ? error.message : "Не удалось загрузить заказ");
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  const closeOrder = () => {
+    setSelectedOrder(null);
+    setOrderDetails(null);
+    setDetailsError(null);
+    setDetailsLoading(false);
+  };
+
   return (
     <>
       <Table
@@ -78,6 +108,7 @@ export const TableKitchen = ({ orders }: TableKitchenProps) => {
         headerHeight={60}
         fontVariant="label-s-regular-12"
         foundRow={foundRow === -1 ? null : foundRow}
+        onRowClick={(order) => void openOrder(order)}
       />
       <ColumnFilter
         options={statusFilter}
@@ -93,6 +124,46 @@ export const TableKitchen = ({ orders }: TableKitchenProps) => {
         id="type-filters"
         onToggle={(open) => setActiveColumn(open ? "type" : null)}
       />
+      <ModalOrderConfirm
+        isOpen={selectedOrder !== null}
+        onClose={closeOrder}
+        title={`Заказ #${selectedOrder?.number ?? ""}`}
+        deliveryType={orderDetails?.type === 2 ? "pickup" : "delivery"}
+        deliveryTime={orderDetails?.date_time_preorder || orderDetails?.give_data_time || orderDetails?.date_time_order || "Не указано"}
+        clientPhone={orderDetails?.phone || "Не указан"}
+        address={orderDetails?.type_order_addr_new || formatAddress(orderDetails?.address) || "Не указан"}
+        intercom="Не указан"
+        payment={paymentLabel(orderDetails?.payment_type)}
+        comment={orderDetails?.comment ?? undefined}
+        items={(orderDetails?.items ?? []).map((item) => ({
+          name: item.name ?? `Позиция ${item.item_id}`,
+          quantity: Number(item.count),
+          price: Number(item.price),
+        }))}
+        totalPrice={orderDetails?.order_price ?? selectedOrder?.amount ?? 0}
+        renderActions={() => {
+          if (detailsLoading) return <Text>Загрузка заказа…</Text>;
+          if (detailsError) return <Text className="text-error">{detailsError}</Text>;
+          return null;
+        }}
+      />
     </>
   );
+};
+
+const formatAddress = (address?: OrderDto["address"]) => {
+  if (!address) return "";
+
+  return [
+    address.street,
+    address.home && `д. ${address.home}`,
+    address.apartment && `кв. ${address.apartment}`,
+  ]
+    .filter(Boolean)
+    .join(", ");
+};
+
+const paymentLabel = (paymentType?: number) => {
+  if (paymentType === undefined) return "Не указана";
+  return paymentType === 1 ? "Наличный расчёт" : "Безналичный расчёт";
 };

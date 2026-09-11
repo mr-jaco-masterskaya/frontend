@@ -48,6 +48,7 @@ export type OrderDto = {
     home?: string;
     apartment?: string;
   };
+  type_order_addr_new?: string | null;
   comment: string | null;
   items?: OrderItemDto[];
 };

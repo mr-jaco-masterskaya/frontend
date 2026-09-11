@@ -1,7 +1,7 @@
 @reference "../../../app/globals.css";
 
 .sidebar {
-  @apply bg-base pt-3 w-[160px] h-screen min-h-[720px] flex items-center flex-col gap-5; 
+  @apply bg-base pt-3 w-[160px] h-screen min-h-[800px] flex items-center flex-col gap-5; 
 }
 
 .sidebar-collapsed {
@@ -24,8 +24,10 @@
   @apply flex-1 w-full;
 }
 
+/* Отступ между пунктами держим заметно больше кольца hover, иначе соседние
+   кнопки при наведении читаются как один слипшийся блок. */
 .sidebar-list {
-  @apply flex flex-col gap-1;
+  @apply flex flex-col items-center gap-3;
 }
 
 .sidebar-list-collapsed {
