@@ -4,11 +4,12 @@ import { Table } from "@/shared/ui/Table/Table";
 import { OrdersHistoryProps, OrderHistoryRow } from "./OrdersHistory.types";
 import "./OrdersHistory.styles.css";
 import { ordersHistoryColumns } from "./OrdersHistory.columns";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ModalOrderConfirm } from "@/features/order/ModalOrderConfirm/ModalOrderConfirm";
-import { baseOrderDetails } from "../../data/mocks";
 import { Button } from "@/shared/ui/Button/Button";
 import { Text } from "@/shared/ui/Typography/Typography";
+import { ordersApi } from "@/entities/Order/api/ordersApi";
+import { mapOrderDetails, type OrderDetailsView } from "./OrdersHistory.mapper";
 
 export const OrdersHistory = ({
   isOpen,
@@ -18,15 +19,70 @@ export const OrdersHistory = ({
   error = null,
 }: OrdersHistoryProps) => {
   const [selectedOrder, setSelectedOrder] = useState<OrderHistoryRow | null>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDetailsView | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+  const detailsRequestId = useRef(0);
+
+  const loadOrderDetails = async (order: OrderHistoryRow) => {
+    const requestId = ++detailsRequestId.current;
+    setSelectedOrder(order);
+    setOrderDetails(null);
+    setDetailsError(null);
+    setDetailsLoading(true);
+
+    try {
+      const response = await ordersApi.show(order.orderId, order.pointId);
+      if (requestId === detailsRequestId.current) {
+        setOrderDetails(mapOrderDetails(response.data));
+      }
+    } catch (error) {
+      if (requestId === detailsRequestId.current) {
+        setDetailsError(
+          error instanceof Error ? error.message : "Не удалось загрузить состав заказа",
+        );
+      }
+    } finally {
+      if (requestId === detailsRequestId.current) setDetailsLoading(false);
+    }
+  };
+
+  const closeOrderDetails = () => {
+    detailsRequestId.current += 1;
+    setSelectedOrder(null);
+    setOrderDetails(null);
+    setDetailsError(null);
+    setDetailsLoading(false);
+  };
 
   const mappedOrders = orders.map((order) => ({
     ...order,
-    onRepeat: order.canRepeat ? () => setSelectedOrder(order) : undefined,
-    onShowComposition: () => setSelectedOrder(order),
+    onRepeat: order.canRepeat ? () => void loadOrderDetails(order) : undefined,
+    onShowComposition: () => void loadOrderDetails(order),
   }));
 
   const renderOrderActions = () => {
     if (!selectedOrder) return null;
+
+    if (detailsLoading) {
+      return <Text className="orders-history__details-state">Загрузка состава заказа…</Text>;
+    }
+
+    if (detailsError) {
+      return (
+        <div className="orders-history__details-state" role="alert">
+          <Text>{detailsError}</Text>
+          <Button
+            variant="base"
+            theme="primary"
+            size="sm"
+            onClick={() => void loadOrderDetails(selectedOrder)}
+          >
+            Повторить
+          </Button>
+        </div>
+      );
+    }
     
     return selectedOrder.canRepeat ? (
       <div className="flex flex-col gap-2 items-end ml-auto">
@@ -60,24 +116,31 @@ export const OrdersHistory = ({
             Последние 3 заказа можно повторить
           </span>
           <div className="orders-history__table-wrapper">
-            {loading ? <span>Загрузка истории заказов…</span> : error ? <span>{error}</span> : <Table data={mappedOrders} columns={ordersHistoryColumns} width={796} height={304} rowHeight={56} headerHeight={52} variant="secondary" />}
+            {loading ? (
+              <span>Загрузка истории заказов…</span>
+            ) : error ? (
+              <span>{error}</span>
+            ) : mappedOrders.length === 0 ? (
+              <span>У клиента пока нет заказов</span>
+            ) : (
+              <Table data={mappedOrders} columns={ordersHistoryColumns} width={796} height={304} rowHeight={56} headerHeight={52} variant="secondary" />
+            )}
           </div>
         </div>
       </Modal>
       <ModalOrderConfirm
         isOpen={!!selectedOrder}
-        onClose={() => setSelectedOrder(null)}
+        onClose={closeOrderDetails}
         title={`Заказ ${selectedOrder?.orderNumber}`}
-        deliveryTime={baseOrderDetails.deliveryTime}
-        clientPhone={baseOrderDetails.clientPhone}
-        address={baseOrderDetails.address}
-        intercom={baseOrderDetails.intercom}
-        payment={baseOrderDetails.payment}
-        promocode={baseOrderDetails.promocode}
-        promocodeDescription={baseOrderDetails.promocodeDescription}
-        comment={baseOrderDetails.comment}
-        items={baseOrderDetails.items}
-        totalPrice={baseOrderDetails.totalPrice}
+        deliveryType={orderDetails?.deliveryType}
+        deliveryTime={orderDetails?.deliveryTime ?? "Загрузка…"}
+        clientPhone={orderDetails?.clientPhone ?? "Загрузка…"}
+        address={orderDetails?.address ?? "Загрузка…"}
+        intercom={orderDetails?.intercom ?? "Загрузка…"}
+        payment={orderDetails?.payment ?? "Загрузка…"}
+        comment={orderDetails?.comment}
+        items={orderDetails?.items ?? []}
+        totalPrice={orderDetails?.totalPrice ?? selectedOrder?.total ?? 0}
         renderActions={renderOrderActions}
       />
     </>

@@ -27,7 +27,7 @@ export const SearchForm = () => {
       </div>
 
       <Button type="submit" variant="base" theme={phone.length === 10 && !searched && !loading ? "primary" : "secondary"} size="sm" disabled={loading}>
-        <Text variant="body-m-medium-16">Найти</Text>
+        <Text variant="body-m-medium-16">{loading ? "Поиск…" : "Найти"}</Text>
       </Button>
     </form>
   );

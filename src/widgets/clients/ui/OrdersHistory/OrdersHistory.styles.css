@@ -24,3 +24,7 @@
 .orders-history__table-wrapper .table-secondary {
   border: none !important;
 }
+
+.orders-history__details-state {
+  @apply ml-auto flex items-center gap-3;
+}

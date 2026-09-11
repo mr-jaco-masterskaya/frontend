@@ -2,6 +2,8 @@ import { OrderHistoryRow } from '../ui/OrdersHistory/OrdersHistory.types';
 
 export const orderHistoryMock: OrderHistoryRow[] = [
   {
+    orderId: 11014,
+    pointId: 1,
     date: '01.10.25',
     orderNumber: '#011014',
     status: 'Доставлен',
@@ -11,6 +13,8 @@ export const orderHistoryMock: OrderHistoryRow[] = [
     onRepeat: () => alert('Повторить #011014'),
   },
   {
+    orderId: 150906,
+    pointId: 1,
     date: '15.09.25',
     orderNumber: '#150906',
     status: 'Доставлен',
@@ -20,6 +24,8 @@ export const orderHistoryMock: OrderHistoryRow[] = [
     onRepeat: () => alert('Повторить #150906'),
   },
   {
+    orderId: 10918,
+    pointId: 1,
     date: '01.09.25',
     orderNumber: '#010918',
     status: 'Доставлен',
@@ -29,6 +35,8 @@ export const orderHistoryMock: OrderHistoryRow[] = [
     onRepeat: () => alert('Повторить #010918'),
   },
   {
+    orderId: 12345,
+    pointId: 1,
     date: '01.10.25',
     orderNumber: '#12345',
     status: 'Доставлен',
@@ -37,43 +45,3 @@ export const orderHistoryMock: OrderHistoryRow[] = [
     onShowComposition: () => alert('Состав #12345'),
   },
 ];
-
-export const sampleItems = [
-  { name: 'Филадельфия Лайт', quantity: 1, price: 339 },
-  { name: 'Акваланг запечённый унаги', quantity: 1, price: 319 },
-  { name: 'Коралл запечённый унаги', quantity: 1, price: 229 },
-  { name: 'Ролл Жако', quantity: 1, price: 0 },
-  { name: 'Васаби', quantity: 2, price: 18 },
-  { name: 'Вилка', quantity: 5, price: 0 },
-  { name: 'Палочки', quantity: 2, price: 0 },
-];
-
-export const sampleDecomposition= [
-  { name: 'Филадельфия Лайт', status: 'Приготовлен' },
-  { name: 'Акваланг запечённый унаги', status: 'Готовится' },
-  { name: 'Коралл запечённый унаги', status: 'В очереди' },
-  { name: 'Ролл Жако', status: 'В очереди' },
-  { name: 'Васаби', status: 'Приготовлен' },
-  { name: 'Васаби', status: 'Приготовлен' },
-  { name: 'Вилка', status: 'Приготовлен' },
-  { name: 'Вилка', status: 'Приготовлен' },
-  { name: 'Вилка', status: 'Приготовлен' },
-  { name: 'Вилка', status: 'Приготовлен' },
-  { name: 'Вилка', status: 'Приготовлен' },
-  { name: 'Палочки', status: 'Приготовлен' },
-  { name: 'Палочки', status: 'Приготовлен' },
-];
-
-export const baseOrderDetails = {
-  title: 'Заказ № 800602 от 23 октября 2025',
-  deliveryTime: 'Время ожидания 0:45-1:15',
-  clientPhone: '+7 (999) 999-99-99',
-  address: 'г. Тольятти, ул. Ленинградская, 27, п.1, эт.3, кв.15',
-  intercom: 'работает',
-  payment: 'Наличный расчёт\nСдача с 5 000 рублей',
-  promocode: 'ПТЮИУЦУ6',
-  promocodeDescription: 'Бесплатный ролл Жако. С Днем Рождения!)',
-  comment: 'Позвонить за 30 минут для заказа пропуска',
-  items: sampleItems,
-  totalPrice: 975,
-}

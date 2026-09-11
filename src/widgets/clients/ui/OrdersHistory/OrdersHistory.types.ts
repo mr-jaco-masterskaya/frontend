@@ -1,4 +1,6 @@
 export interface OrderHistoryRow {
+  orderId: number;
+  pointId: number;
   date: string;
   orderNumber: string;
   status: string;

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/nextjs';
 import { useState } from 'react';
 import { OrdersHistory } from './OrdersHistory';
 import { orderHistoryMock } from '../../data/mocks';
@@ -31,6 +31,8 @@ export const ManyOrders: Story = {
   },
   args: {
     orders: Array(15).fill(null).map((_, i) => ({
+      orderId: i + 1,
+      pointId: 1,
       date: '01.10.25',
       orderNumber: `#0${i + 1}`,
       status: 'Доставлен',
