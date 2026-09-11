@@ -6,8 +6,8 @@ export interface ModalOrderConfirmProps {
   onClose: () => void;
   onCancel?: () => void;
   onEdit?: () => void;
-  onConfirm?: () => void | Promise<void>;
-  confirmError?: string;
+  /** Returns false when validation blocks submission; true only after confirmation. */
+  onConfirm?: () => boolean | void | Promise<boolean | void>;
   isConfirming?: boolean;
 
   /** Заголовок модалки, например "Заказ № 800602 от 23 октября 2025" */

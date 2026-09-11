@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { notificationsApi } from '@/entities/notifications/api/notificationsApi';
 import { useNotificationStore } from '@/entities/notifications/store/Notification/Notification';
-import { CafeAvailableNotification, CafeStoppedNotification } from '../Notification/Notification';
+import { CafeAvailableNotification, CafeStoppedNotification, FeedbackNotification } from '../Notification/Notification';
 import './NotificationHost.styles.css';
 
 const POLL_INTERVAL_MS = 30_000;
@@ -44,9 +44,14 @@ export const NotificationHost = () => {
 
   return (
     <aside className="notification-host" aria-live="polite" aria-label="Уведомления">
-      {alerts.map((alert) => alert.variant === 'cafe.stopped'
-        ? <CafeStoppedNotification key={alert.id} id={alert.id} zoneName={alert.zoneName} />
-        : <CafeAvailableNotification key={alert.id} id={alert.id} zoneName={alert.zoneName} />)}
+      {alerts.map((alert) => {
+        if ('message' in alert) {
+          return <FeedbackNotification key={alert.id} id={alert.id} message={alert.message} variant={alert.variant} />;
+        }
+        return alert.variant === 'cafe.stopped'
+          ? <CafeStoppedNotification key={alert.id} id={alert.id} zoneName={alert.zoneName} />
+          : <CafeAvailableNotification key={alert.id} id={alert.id} zoneName={alert.zoneName} />;
+      })}
     </aside>
   );
 };

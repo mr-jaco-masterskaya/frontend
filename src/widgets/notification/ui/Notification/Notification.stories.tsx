@@ -32,11 +32,12 @@ export const Default: Story = {
         {alerts.map((alert) =>
           alert.variant === 'cafe.stopped'
             ? <CafeStoppedNotification key={alert.id} id={alert.id} zoneName={alert.zoneName} />
-            : <CafeAvailableNotification key={alert.id} id={alert.id} zoneName={alert.zoneName} />
+            : alert.variant === 'cafe.available'
+              ? <CafeAvailableNotification key={alert.id} id={alert.id} zoneName={alert.zoneName} />
+              : null
         )}
       </div>
     );
   },
 };
-
 

@@ -22,6 +22,7 @@ import { normalizeHome, splitStreetAndHome } from "./model/orderAddress";
 import { toPreorderAt } from "./model/orderSchedule";
 import { validateDeliveryDetails } from "./model/orderDelivery";
 import { paymentDraftFields } from "./model/orderPayment";
+import { useNotificationStore } from "@/entities/notifications/store/Notification/Notification";
 
 export default function CurrentOrderPage() {
   const step = useOrderStore((s) => s.step);
@@ -48,9 +49,9 @@ export default function CurrentOrderPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmError, setConfirmError] = useState<string | null>(null);
   const [confirmedOrderNumber, setConfirmedOrderNumber] = useState<number | null>(null);
   const [validatedCart, setValidatedCart] = useState<ValidatedCart | null>(null);
+  const addFeedback = useNotificationStore((state) => state.addFeedback);
 
   const deliveryPrice = validatedCart?.delivery?.fee ?? 0;
 
@@ -59,9 +60,9 @@ export default function CurrentOrderPage() {
     0,
   );
 
-  const totalPrice = validatedCart?.total ?? itemsTotal + deliveryPrice;
+  const totalPrice = validatedCart?.valid ? validatedCart.total : itemsTotal + deliveryPrice;
 
-  const confirmationItems = validatedCart
+  const confirmationItems = validatedCart && validatedCart.items.length > 0
     ? validatedCart.items.map((item) => ({
         name: item.name || `Товар #${item.itemId}`,
         quantity: item.quantity,
@@ -91,7 +92,7 @@ export default function CurrentOrderPage() {
     const deliveryError = validateBeforeConfirmation();
     if (deliveryError) {
       setValidatedCart(null);
-      setConfirmError(deliveryError);
+      addFeedback(deliveryError);
       setIsConfirmOpen(true);
       return;
     }
@@ -99,11 +100,11 @@ export default function CurrentOrderPage() {
     const selectedPointId = deliveryType === "delivery" ? delivery.pointId : pointId;
     if (!selectedCityId || !selectedPointId || items.length === 0) {
       setValidatedCart(null);
+      addFeedback("Выберите точку получения и добавьте хотя бы одно блюдо");
       setIsConfirmOpen(true);
       return;
     }
     setIsSubmitting(true);
-    setConfirmError(null);
     try {
       const cart = await orderCreationApi.validateCart({
         cityId: selectedCityId,
@@ -116,10 +117,13 @@ export default function CurrentOrderPage() {
         items: items.map((item) => ({ itemId: Number(item.id), quantity: item.count })),
       });
       setValidatedCart(cart);
-      if (!cart.valid) setConfirmError("Корзина изменилась. Проверьте состав заказа");
+      if (!cart.valid) {
+        const reason = cart.errors?.map((error) => error.text).filter(Boolean).join(" ");
+        addFeedback(reason || "Корзина изменилась. Проверьте состав заказа");
+      }
     } catch (error) {
       setValidatedCart(null);
-      setConfirmError(error instanceof Error ? error.message : "Не удалось проверить корзину");
+      addFeedback(error instanceof Error ? error.message : "Не удалось проверить корзину");
     } finally {
       setIsSubmitting(false);
       setIsConfirmOpen(true);
@@ -127,21 +131,21 @@ export default function CurrentOrderPage() {
   };
 
   const handleConfirm = async () => {
-    setConfirmError(null);
     const deliveryError = validateBeforeConfirmation();
     if (deliveryError) {
-      setConfirmError(deliveryError);
-      return;
+      addFeedback(deliveryError);
+      return false;
     }
     if (validatedCart && !validatedCart.valid) {
-      setConfirmError("Корзина изменилась. Проверьте состав заказа");
-      return;
+      const reason = validatedCart.errors.map((error) => error.text).filter(Boolean).join(" ");
+      addFeedback(reason || "Корзина изменилась. Проверьте состав заказа");
+      return false;
     }
     const typeOrder = deliveryType === "delivery" ? 1 : 2;
     const paymentResult = paymentDraftFields(payment.method, payment.cashAmount);
     if (!paymentResult.valid) {
-      setConfirmError(paymentResult.message);
-      return;
+      addFeedback(paymentResult.message);
+      return false;
     }
     setIsSubmitting(true);
     try {
@@ -149,8 +153,16 @@ export default function CurrentOrderPage() {
       if (!selectedCityId) throw new Error("Не удалось определить город заказа");
 
       const lookup = customerId ? null : await customerApi.lookup(phone, selectedCityId);
-      const selectedCustomerId = customerId ?? lookup?.customer?.id;
-      if (!selectedCustomerId) throw new Error("Клиент не найден. Нажмите «Найти» или проверьте телефон");
+      let selectedCustomerId = customerId ?? lookup?.customer?.id;
+      if (!selectedCustomerId) {
+        const created = await customerApi.create({
+          phone,
+          cityId: selectedCityId,
+          name: "Клиент",
+        });
+        selectedCustomerId = created.customer.id;
+        useOrderStore.getState().setCustomerId(selectedCustomerId);
+      }
 
       const customerAddresses = lookup?.addresses ?? await customerApi.addresses(selectedCustomerId, selectedCityId);
       let selectedPointId = deliveryType === "delivery" ? delivery.pointId : pointId;
@@ -217,13 +229,15 @@ export default function CurrentOrderPage() {
         items: items.map((item) => ({ itemId: Number(item.id), quantity: item.count })),
       });
       setConfirmedOrderNumber(confirmedOrder.chefOrderId ?? confirmedOrder.id);
+      addFeedback(`Заказ №${confirmedOrder.chefOrderId ?? confirmedOrder.id} успешно оформлен`, 'success');
       setIsConfirmOpen(false);
       resetOrder();
+      return true;
     } catch (error) {
       const message = error instanceof ApiError && error.code
         ? `${error.code}: ${error.message}`
         : error instanceof Error ? error.message : "Не удалось создать заказ";
-      setConfirmError(message);
+      addFeedback(message);
       throw error;
     } finally {
       setIsSubmitting(false);
@@ -328,7 +342,6 @@ export default function CurrentOrderPage() {
         onCancel={handleCancelConfirm}
         onEdit={() => setIsConfirmOpen(false)}
         onConfirm={handleConfirm}
-        confirmError={confirmError ?? undefined}
         isConfirming={isSubmitting}
         title={`Заказ № ${confirmedOrderNumber ?? orderNumber ?? "—"} от ${new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}`}
         deliveryType={deliveryType}

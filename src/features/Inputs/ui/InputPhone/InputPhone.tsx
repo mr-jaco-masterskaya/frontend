@@ -4,6 +4,16 @@ import { IInputPhoneUIProps } from './InputPhone.types';
 import './InputPhone.styles.css';
 import Image from 'next/image';
 
+export const normalizePhoneDigits = (value: string) => {
+  let digits = value.replace(/\D/g, '');
+
+  if (digits.length > 10 && (digits.startsWith('7') || digits.startsWith('8'))) {
+    digits = digits.slice(1);
+  }
+
+  return digits.slice(0, 10);
+};
+
 const formatPhone = (digits: string) => {
   const part1 = digits.slice(0, 3);
   const part2 = digits.slice(3, 6);
@@ -34,14 +44,19 @@ export const InputPhone = forwardRef<HTMLInputElement, IInputPhoneUIProps>(
     },
     ref
   ) => {
-    const digits = (value ?? "").replace(/\D/g, "").slice(-10);
+    const digits = normalizePhoneDigits(value ?? "");
     const formatted = formatPhone(digits);
     const clear = digits.length > 0;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const onlyDigits = e.target.value.replace(/\D/g, '').slice(0, 10);
+      const onlyDigits = normalizePhoneDigits(e.target.value);
 
       onChange?.(onlyDigits);
+    };
+
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+      e.preventDefault();
+      onChange?.(normalizePhoneDigits(e.clipboardData.getData('text')));
     };
 
     const clearInput = () => {
@@ -69,6 +84,7 @@ export const InputPhone = forwardRef<HTMLInputElement, IInputPhoneUIProps>(
           type='tel'
           value={formatted}
           onChange={handleChange}
+          onPaste={handlePaste}
           error={error}
           helperText={helperText}
           className={`phone-input ${withSearchIcon ? 'with-icon' : ''} ${className}`}

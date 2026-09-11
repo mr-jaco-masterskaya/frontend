@@ -4,7 +4,8 @@ import { Button } from "@/shared/ui/Button/Button";
 import { ModalOrderConfirmProps } from "./ModalOrderConfirm.types";
 import "./ModalOrderConfirm.styles.css";
 import { ModalOrderDelete } from "../ModalOrderDelete/ModalOrderDelete";
-import { ModalOrderSuccess } from "../ModalOrderSuccess/ModalOrderSuccess";
+// Kept for the product decision record: the success modal was replaced by the global toast.
+// import { ModalOrderSuccess } from "../ModalOrderSuccess/ModalOrderSuccess";
 import { useState } from "react";
 
 export const ModalOrderConfirm = ({
@@ -14,7 +15,6 @@ export const ModalOrderConfirm = ({
   onCancel,
   onEdit,
   onConfirm,
-  confirmError,
   isConfirming = false,
   title,
   deliveryType="delivery",
@@ -31,7 +31,6 @@ export const ModalOrderConfirm = ({
   deliveryPrice = 0,
 }: ModalOrderConfirmProps) => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
   const handleCancelClick = () => {
     setIsDeleteOpen(true);
@@ -49,16 +48,11 @@ export const ModalOrderConfirm = ({
 
   const handleConfirmClick = async () => {
     try {
-      await onConfirm?.();
-      setIsSuccessOpen(true);
+      const confirmed = await onConfirm?.();
+      if (confirmed === false) return;
     } catch {
       // The parent exposes the actionable API error while the modal remains open.
     }
-  };
-
-  const handleCloseSuccess = () => {
-    setIsSuccessOpen(false);
-    onClose();
   };
 
   return (
@@ -177,7 +171,6 @@ export const ModalOrderConfirm = ({
                   >
                     {isConfirming ? "Создание…" : "Подтвердить заказ"}
                   </Button>
-                  {confirmError && <span role="alert" className="modal-order-confirm__error">{confirmError}</span>}
                 </>
               )}
             </div>
@@ -185,7 +178,7 @@ export const ModalOrderConfirm = ({
         </div>
       </Modal>
       <ModalOrderDelete isOpen={isDeleteOpen} onClose={handleCloseDelete} onCancelOrder={handleConfirmCancel}/>
-      <ModalOrderSuccess isOpen={isSuccessOpen} onClose={handleCloseSuccess}/>
+      {/* <ModalOrderSuccess isOpen={isSuccessOpen} onClose={handleCloseSuccess}/> */}
     </>
   );
 };

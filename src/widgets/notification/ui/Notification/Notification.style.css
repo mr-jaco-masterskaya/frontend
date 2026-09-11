@@ -19,3 +19,41 @@
 .close-button {
   @apply flex items-center justify-center w-11 h-11 absolute top-3 right-4 cursor-pointer;
 }
+
+.feedback-notification {
+  @apply fixed bottom-5 left-0 right-0 z-[1100] mx-auto flex min-h-12 w-[min(80vw,960px)] items-center justify-between gap-4 rounded-xl px-5 py-3 text-base shadow-[0_6px_24px_rgba(0,0,0,0.22)];
+  color: #fff;
+  animation: feedback-slide-up 180ms ease-out both;
+  will-change: transform, opacity;
+}
+
+.feedback-notification--error {
+  background: rgb(196 28 28 / 94%);
+}
+
+.feedback-notification--success {
+  background: rgb(83 169 61 / 94%);
+}
+
+.feedback-notification--closing {
+  animation: feedback-slide-down 180ms ease-in both;
+  pointer-events: none;
+}
+
+.feedback-notification__message {
+  @apply min-w-0 flex-1 text-center text-sm font-medium;
+}
+
+.feedback-notification__close {
+  @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-2xl leading-none text-white/90 transition hover:bg-white/15 hover:text-white;
+}
+
+@keyframes feedback-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes feedback-slide-down {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(16px); }
+}

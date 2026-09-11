@@ -1,4 +1,4 @@
-.customer-create-modal { display: grid; gap: 14px; min-width: min(420px, 80vw); }
+.customer-create-modal { display: grid; gap: 14px; min-width: min(420px, 80vw); padding: 0 20px; }
 .customer-create-modal__phone { margin: 0; color: var(--color-text-secondary); }
 .customer-create-modal__error { color: var(--color-error); font-size: 12px; }
 .customer-create-modal__actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }

@@ -71,7 +71,7 @@ export const DeliveryTab = ({ activeTimeTab, setActiveTimeTab }: DeliveryTabProp
                 cafeId: null,
               })
             } 
-            label="Улица" 
+            label="Улица, дом"
             placeholder="Введите улицу, дом"
             helperText={addressCheckStatus === "success" ? "Адрес входит в зону доставки" : ""}
             error={addressCheckStatus === "error" ? "Адрес вне зоны доставки. Введите другой адрес" : ""}
