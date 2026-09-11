@@ -17,6 +17,9 @@ import { Text } from "@/shared/ui/Typography/Typography";
 export default function DeliveryMapPage() {
   const resetMap = useMapStore((s) => s.resetMap);
   const cityName = useOrderStore((state) => state.city);
+  const deliveryType = useOrderStore((state) => state.deliveryType);
+  const delivery = useOrderStore((state) => state.delivery);
+  const pickup = useOrderStore((state) => state.pickup);
   const setCity = useOrderStore((state) => state.setCity);
   const [cities, setCities] = useState<City[]>([]);
   const [points, setPoints] = useState<Point[]>([]);
@@ -78,7 +81,14 @@ export default function DeliveryMapPage() {
 
   return (
     <div className="flex flex-1 justify-end min-h-0 gap-3">
-      <Map cafes={cafes} deliveryZones={mapZones} />
+      <Map
+        cafes={cafes}
+        deliveryZones={mapZones}
+        acceptedAddress={deliveryType === 'delivery' && delivery.addressCheckStatus === 'success' && delivery.coordinates
+          ? { address: delivery.address, coords: delivery.coordinates }
+          : null}
+        selectedPickupAddress={deliveryType === 'pickup' ? pickup.cafe : null}
+      />
       {error && !cities.length ? (
         <div className="flex h-full w-[354px] items-center justify-center rounded-xl bg-base px-4 text-center">
           <Text className="text-accent">{error}</Text>

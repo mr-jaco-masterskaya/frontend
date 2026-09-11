@@ -8,6 +8,8 @@ export type PointDto = {
   name: string;
   address: string;
   base: string;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type PointsResponse = { st: true; data: PointDto[] };
@@ -25,6 +27,8 @@ export function mapPoint(dto: PointDto): Point {
     name: String(dto.name ?? ''),
     address: String(dto.address ?? ''),
     base: String(dto.base ?? ''),
+    latitude: dto.latitude == null ? null : Number(dto.latitude),
+    longitude: dto.longitude == null ? null : Number(dto.longitude),
   };
 }
 
@@ -45,4 +49,3 @@ export const pointsApi = {
     return mapPoint(response.data);
   },
 };
-

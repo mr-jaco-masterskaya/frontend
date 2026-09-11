@@ -11,6 +11,7 @@ interface DeliveryForm {
   streetId: number | null;
   pointId: number | null;
   cafeId: string | null;
+  coordinates: [number, number] | null;
   building: string;
   entrance: string;
   floor: string;
@@ -99,6 +100,7 @@ const initialState: OrderState = {
     streetId: null,
     pointId: null,
     cafeId: null,
+    coordinates: null,
     building: '',
     entrance: '',
     floor: '',

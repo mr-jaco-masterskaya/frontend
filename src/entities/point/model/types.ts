@@ -10,5 +10,6 @@ export type Point = {
   name: string;
   address: string;
   base: string;
+  latitude: number | null;
+  longitude: number | null;
 };
-

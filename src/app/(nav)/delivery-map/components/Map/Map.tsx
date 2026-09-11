@@ -23,11 +23,13 @@ import { Text } from "@/shared/ui/Typography/Typography";
 type MapProps = {
   cafes: CafePoint[];
   deliveryZones: DeliveryZone[];
+  acceptedAddress?: { address: string; coords: LngLat } | null;
+  selectedPickupAddress?: string | null;
 };
 
 const apiKey = process.env.NEXT_PUBLIC_YMAPS_API_KEY ?? "";
 
-export const Map = ({ cafes, deliveryZones }: MapProps) => {
+export const Map = ({ cafes, deliveryZones, acceptedAddress = null, selectedPickupAddress = null }: MapProps) => {
   const [reactifiedApi, setReactifiedApi] = React.useState<ReactifiedApi>();
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const mapRef = React.useRef<YMapType | null>(null);
@@ -54,15 +56,20 @@ export const Map = ({ cafes, deliveryZones }: MapProps) => {
   }, [cafes, deliveryZones]);
 
   const boundsKey = JSON.stringify(dataBounds ?? null);
+  const selectedPickup = cafes.find((cafe) => cafe.address === selectedPickupAddress);
   const location = locationOverride?.boundsKey === boundsKey
     ? locationOverride.location
-    : dataBounds ? { bounds: dataBounds } : defaultLocation;
+    : acceptedAddress ? { center: acceptedAddress.coords, zoom: DEFAULT_ZOOM }
+      : selectedPickup?.coordinates ? { center: selectedPickup.coordinates, zoom: DEFAULT_ZOOM }
+        : dataBounds ? { bounds: dataBounds } : defaultLocation;
 
   const searchResult = useMapStore((s) => s.searchResult);
   const selectedCafeId = useMapStore((s) => s.selectedCafeId);
   const setSearchResult = useMapStore((s) => s.setSearchResult);
   const toggleCafe = useMapStore((s) => s.toggleCafe);
   const selectCafe = useMapStore((s) => s.selectCafe);
+  const effectiveSelectedCafeId = selectedCafeId ?? selectedPickup?.id ?? null;
+  const mapSearchResult = searchResult ?? acceptedAddress;
 
   React.useEffect(() => {
     let cancelled = false;
@@ -172,7 +179,8 @@ export const Map = ({ cafes, deliveryZones }: MapProps) => {
   return (
     <div className="relative h-full w-full min-w-0 overflow-hidden rounded-xl">
       <SearchInput
-        selectedAddress={searchResult}
+        selectedAddress={searchResult ?? acceptedAddress}
+        initialAddress={acceptedAddress?.address}
         onSelectAddress={handleSearchResult}
         externalError={isOutOfZone ? "Адрес вне зоны доставки" : null}
         className="absolute top-3 left-3 right-3 z-10"
@@ -181,18 +189,18 @@ export const Map = ({ cafes, deliveryZones }: MapProps) => {
         <YMapDefaultSchemeLayer />
         <YMapDefaultFeaturesLayer />
 
-        {searchResult && (
-          <YMapMarker coordinates={searchResult.coords}>
+        {mapSearchResult && (
+          <YMapMarker coordinates={mapSearchResult.coords}>
             <SearchMarker
-              address={searchResult.address}
-              inDeliveryZone={searchResult.inDeliveryZone === true}
+              address={mapSearchResult.address}
+              inDeliveryZone={searchResult?.inDeliveryZone === true || acceptedAddress !== null}
             />
           </YMapMarker>
         )}
 
         {deliveryZones.filter((zone) => zone.coordinates.length > 0).map((zone) => {
           const color =
-            zone.cafeId === selectedCafeId ? COLORS.selected : COLORS.default;
+            zone.cafeId === effectiveSelectedCafeId ? COLORS.selected : COLORS.default;
           return (
             <YMapFeature
               key={zone.id}
@@ -215,7 +223,7 @@ export const Map = ({ cafes, deliveryZones }: MapProps) => {
             coordinates={cafe.coordinates}
             onClick={() => toggleCafe(cafe.id)}
           >
-            <CafeMarker cafe={cafe} isSelected={cafe.id === selectedCafeId} />
+            <CafeMarker cafe={cafe} isSelected={cafe.id === effectiveSelectedCafeId} />
           </YMapMarker>
           );
         })}

@@ -11,11 +11,12 @@ const HOUSE_NUMBER_REGEX = /,\s*\d+/;
 
 export const SearchInput = ({
   selectedAddress,
+  initialAddress,
   onSelectAddress,
   externalError,
   className = "",
 }: SearchInputProps) => {
-  const [query, setQuery] = React.useState("");
+  const [query, setQuery] = React.useState(initialAddress ?? "");
   const [suggestions, setSuggestions] = React.useState<SuggestResponse>([]);
   const [internalError, setInternalError] = React.useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
